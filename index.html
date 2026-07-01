@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Greet Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C1B29;
+    --coral:#FF6B57;
+    --coral-dim:#FFE4DF;
+    --teal:#0BA5A0;
+    --teal-dim:#DFF5F3;
+    --cream:#FBF7F0;
+    --gold:#F4B740;
+    --line:#E7E1D4;
+    --muted:#8A8578;
+    --radius:22px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 15% 10%, #fff 0%, transparent 40%),
+      var(--cream);
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+    padding:28px 16px;
+  }
+  .stage{
+    width:100%;
+    max-width:440px;
+  }
+  .ticket{
+    position:relative;
+    background:#fff;
+    border-radius:var(--radius);
+    box-shadow:0 1px 2px rgba(28,27,41,0.04), 0 20px 40px -20px rgba(28,27,41,0.25);
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .ticket-head{
+    padding:26px 26px 18px;
+    background:linear-gradient(135deg,var(--ink) 0%,#2D2B45 100%);
+    color:#fff;
+    position:relative;
+  }
+  .brand-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:17px;
+    letter-spacing:0.2px;
+  }
+  .brand-mark{
+    width:22px;height:22px;border-radius:6px;
+    background:var(--coral);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;font-weight:700;color:var(--ink);
+    transform:rotate(-6deg);
+  }
+  .timer{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:rgba(255,255,255,0.65);
+    display:flex;align-items:center;gap:5px;
+  }
+  .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);}
+  .headline{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:22px;
+    line-height:1.25;
+    margin:0 0 4px;
+  }
+  .sub{
+    font-size:13px;
+    color:rgba(255,255,255,0.6);
+    margin:0;
+  }
+  .perf{
+    position:relative;
+    height:1px;
+    background:transparent;
+  }
+  .perf::before{
+    content:"";
+    position:absolute;
+    top:-1px;left:0;right:0;
+    height:2px;
+    background-image:radial-gradient(circle, var(--cream) 3px, transparent 3.5px);
+    background-size:16px 2px;
+    background-repeat:repeat-x;
+  }
+  .notch{
+    position:absolute;
+    top:calc(var(--headH, 118px) - 11px);
+    width:22px;height:22px;
+    background:var(--cream);
+    border-radius:50%;
+    z-index:2;
+  }
+  .notch.left{left:-11px;}
+  .notch.right{right:-11px;}
+  .progress-wrap{
+    padding:14px 26px 0;
+  }
+  .progress-track{
+    display:flex;
+    gap:6px;
+  }
+  .progress-track span{
+    height:4px;
+    flex:1;
+    border-radius:2px;
+    background:var(--line);
+    transition:background .35s ease;
+  }
+  .progress-track span.done{background:var(--teal);}
+  .progress-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:7px;
+    letter-spacing:0.3px;
+  }
+  .body{
+    padding:22px 26px 26px;
+    min-height:230px;
+    display:flex;
+    flex-direction:column;
+  }
+  .step{display:none;flex-direction:column;gap:16px;animation:rise .35s ease;}
+  .step.active{display:flex;}
+  @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .q{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:19px;
+    line-height:1.3;
+    margin:0;
+  }
+  .hint{font-size:12.5px;color:var(--muted);margin:-10px 0 0;}
+  .stars{display:flex;gap:8px;}
+  .star-btn{
+    background:none;border:none;cursor:pointer;
+    font-size:32px;line-height:1;
+    color:var(--line);
+    transition:transform .15s ease, color .15s ease;
+    padding:0;
+  }
+  .star-btn.filled{color:var(--gold);}
+  .star-btn:hover{transform:translateY(-2px);}
+  .choice-list{display:flex;flex-direction:column;gap:9px;}
+  .choice{
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:14.5px;
+    font-weight:500;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .choice:hover{border-color:var(--coral);}
+  .choice.selected{
+    border-color:var(--teal);
+    background:var(--teal-dim);
+  }
+  .choice .mark{
+    width:16px;height:16px;border-radius:50%;
+    border:1.5px solid var(--line);
+    flex-shrink:0;
+    position:relative;
+  }
+  .choice.selected .mark{border-color:var(--teal);background:var(--teal);}
+  .choice.selected .mark::after{
+    content:"";position:absolute;inset:0;
+    background:#fff;border-radius:50%;
+    width:5px;height:5px;margin:auto;
+  }
+  .chip-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    border:1.5px solid var(--line);
+    border-radius:999px;
+    padding:8px 13px;
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    color:var(--ink);
+    transition:all .15s ease;
+    background:#fff;
+  }
+  .chip.selected{
+    background:var(--coral);
+    border-color:var(--coral);
+    color:#fff;
+  }
+  textarea{
+    width:100%;
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    resize:none;
+    min-height:90px;
+    outline:none;
+  }
+  textarea:focus{border-color:var(--teal);}
+  .nps-row{display:flex;gap:5px;flex-wrap:wrap;}
+  .nps-btn{
+    width:34px;height:34px;
+    border-radius:9px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .nps-btn.selected{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .nps-labels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:-6px;}
+  .spacer{flex:1;}
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:6px;
+  }
+  .btn-primary{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    border-radius:12px;
+    padding:12px 22px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    transition:transform .12s ease, background .15s ease;
+  }
+  .btn-primary:hover{background:var(--coral);}
+  .btn-primary:disabled{opacity:0.35;cursor:not-allowed;}
+  .btn-primary:disabled:hover{background:var(--ink);}
+  .btn-text{
+    background:none;border:none;
+    color:var(--muted);
+    font-size:13px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+  .btn-text:hover{color:var(--ink);}
+  .callout{
+    background:var(--coral-dim);
+    border-radius:12px;
+    padding:14px 16px;
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  .callout.calm{background:var(--teal-dim);}
+  .review-block{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--cream);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:2px;
+  }
+  .review-block .r-icon{
+    width:34px;height:34px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;flex-shrink:0;
+    background:#fff;border:1px solid var(--line);
+  }
+  .thankyou{
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    padding:14px 0 6px;
+  }
+  .ty-mark{
+    width:52px;height:52px;border-radius:50%;
+    background:var(--teal);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;
+  }
+  .ty-mark.warm{background:var(--gold);color:var(--ink);}
+  .restart{margin-top:10px;}
+  @media (max-width:380px){
+    .headline{font-size:20px;}
+    .q{font-size:17px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="ticket" id="ticket">
+
+    <div class="ticket-head" id="ticketHead">
+      <div class="brand-row">
+        <div class="brand"><span class="brand-mark">G</span>Greet</div>
+        <div class="timer"><span class="dot"></span> under 60 sec</div>
+      </div>
+      <h1 class="headline">Quick feedback for the Greet team</h1>
+      <p class="sub">Six taps, then you're done.</p>
+    </div>
+
+    <div class="perf"></div>
+    <div class="notch left"></div>
+    <div class="notch right"></div>
+
+    <div class="progress-wrap">
+      <div class="progress-track" id="progressTrack"></div>
+      <div class="progress-label" id="progressLabel">Step 1</div>
+    </div>
+
+    <div class="body" id="formBody">
+
+      <!-- STEP: overall rating -->
+      <div class="step active" data-step="overall">
+        <h2 class="q">How would you rate your overall experience with Greet?</h2>
+        <div class="stars" id="starRow">
+          <button class="star-btn" data-v="1">★</button>
+          <button class="star-btn" data-v="2">★</button>
+          <button class="star-btn" data-v="3">★</button>
+          <button class="star-btn" data-v="4">★</button>
+          <button class="star-btn" data-v="5">★</button>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <span></span>
+          <button class="btn-primary" id="overallNext" disabled>Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP: play store (happy branch) -->
+      <div class="step" data-step="playstore">
+        <h2 class="q">Would you rate Greet on the Google Play Store?</h2>
+        <div class="review-block"><div class="r-icon">▶</div><span style="font-size:13px;color:var(--muted)">Takes 15 seconds on your device</span></div>
+        <div class="choice-list" id="playChoices">
+          <div class="choice" data-v="yes"><span>Yes, definitely</span><span class="mark"></span></div>
+          <div class="choice" data-v="later"><span>Maybe later</span><span class="mark"></span></div>
+          <div class="choice" data-v="no"><span>No</span><span class="mark"></span></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <button class="btn-text" data-back>Back</button>
+          <button class="btn-primary" id="playNext" disabled>Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP: trustpilot (happy branch) -->
+      <div class="step" data-step="trustpilot">
+        <h2 class="q">Would you be willing to leave us a review on Trustpilot?</h2>
+        <div class="choice-list" id="trustChoices">
+          <div class="choice" data-v="yes"><span>Yes</span><span class="mark"></span></div>
+          <div class="choice" data-v="maybe"><span>Maybe</span><span class="mark"></span></div>
+          <div class="choice" data-v="no"><span>No</span><span class="mark"></span></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <button class="btn-text" data-back>Back</button>
+          <button class="btn-primary" id="trustNext" disabled>Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP: what did you like (happy branch) -->
+      <div class="step" data-step="liked">
+        <h2 class="q">What did you like the most?</h2>
+        <p class="hint">Pick as many as apply.</p>
+        <div class="chip-grid" id="likedChips">
+          <div class="chip" data-v="Easy Event Creation">Easy Event Creation</div>
+          <div class="chip" data-v="Smooth Ticket Booking">Smooth Ticket Booking</div>
+          <div class="chip" data-v="QR Check-in">QR Check-in</div>
+          <div class="chip" data-v="Fast Performance">Fast Performance</div>
+          <div class="chip" data-v="Clean UI">Clean UI</div>
+          <div class="chip" data-v="Customer Support">Customer Support</div>
+          <div class="chip" data-v="Analytics Dashboard">Analytics Dashboard</div>
+          <div class="chip" data-v="Rewards & Loyalty">Rewards &amp; Loyalty</div>
+          <div class="chip" data-v="Mobile Experience">Mobile Experience</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <button class="btn-text" data-back>Back</button>
+          <button class="btn-primary" data-next="improve">Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP: low rating empathy + improve (sad branch entry) -->
+      <div class="step" data-step="sadIntro">
+        <div class="callout">Thanks for the honest rating. Help us understand what fell short — this goes straight to the product team, not a public review.</div>
+        <h2 class="q" style="margin-top:2px">Where can we improve?</h2>
+        <p class="hint">Pick as many as apply.</p>
+        <div class="chip-grid" id="improveChipsSad">
+          <div class="chip" data-v="Website Speed">Website Speed</div>
+          <div class="chip" data-v="UI/UX">UI/UX</div>
+          <div class="chip" data-v="Payment Experience">Payment Experience</div>
+          <div class="chip" data-v="QR Scanner">QR Scanner</div>
+          <div class="chip" data-v="Mobile App">Mobile App</div>
+          <div class="chip" data-v="Dashboard">Dashboard</div>
+          <div class="chip" data-v="Reports">Reports</div>
+          <div class="chip" data-v="Notifications">Notifications</div>
+          <div class="chip" data-v="Customer Support">Customer Support</div>
+          <div class="chip" data-v="Event Creation Process">Event Creation Process</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <button class="btn-text" data-back>Back</button>
+          <button class="btn-primary" data-next="tellmore">Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP: where improve (happy branch, optional) -->
+      <div class="step" data-step="improve">
+        <h2 class="q">Where can we improve?</h2>
+        <p class="hint">Optional — pick as many as apply.</p>
+        <div class="chip-grid" id="improveChips">
+          <div class="chip" data-v="Website Speed">Website Speed</div>
+          <div class="chip" data-v="UI/UX">UI/UX</div>
+          <div class="chip" data-v="Payment Experience">Payment Experience</div>
+          <div class="chip" data-v="QR Scanner">QR Scanner</div>
+          <div class="chip" data-v="Mobile App">Mobile App</div>
+          <div class="chip" data-v="Dashboard">Dashboard</div>
+          <div class="chip" data-v="Reports">Reports</div>
+          <div class="chip" data-v="Notifications">Notifications</div>
+          <div class="chip" data-v="Customer Support">Customer Support</div>
+          <div class="chip" data-v="Event Creation Process">Event Creation Process</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <button class="btn-text" data-back>Back</button>
+          <button class="btn-primary" data-next="tellmore">Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP: tell us more -->
+      <div class="step" data-step="tellmore">
+        <h2 class="q">Tell us more</h2>
+        <p class="hint">Optional.</p>
+        <textarea id="freeText" placeholder="Tell us what we can improve or any feature you'd love to see."></textarea>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <button class="btn-text" data-back>Back</button>
+          <button class="btn-primary" data-next="nps">Continue</button>
+        </div>
+      </div>
+
+      <!-- STEP: NPS -->
+      <div class="step" data-step="nps">
+        <h2 class="q">Would you recommend Greet to other organizers?</h2>
+        <div class="nps-row" id="npsRow"></div>
+        <div class="nps-labels"><span>Not at all likely</span><span>Extremely likely</span></div>
+        <div class="spacer"></div>
+        <div class="nav-row">
+          <button class="btn-text" data-back>Back</button>
+          <button class="btn-primary" id="npsNext" disabled>Submit</button>
+        </div>
+      </div>
+
+      <!-- STEP: thank you -->
+      <div class="step" data-step="thanks">
+        <div class="thankyou">
+          <div class="ty-mark" id="tyMark">✓</div>
+          <h2 class="q" id="tyHeadline">Thank you for helping us improve Greet.</h2>
+          <p class="hint" id="tySub">Your feedback directly shapes future updates.</p>
+          <button class="btn-text restart" id="restartBtn">Fill it again (demo)</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Paste your deployed Apps Script Web App URL here (ends in /exec)
+  const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzGNExOG_wAAd9wwoQ05k8iCgP5c7dOy-x7Jj7FobCl3CD10kSmtLj5ZReFjOq2iclUAg/exec";
+
+  const state = {
+    overall: 0,
+    play: null,
+    trust: null,
+    liked: new Set(),
+    improve: new Set(),
+    text: "",
+    nps: null,
+    branch: null // 'happy' | 'sad'
+  };
+
+  const branches = {
+    happy: ['overall','playstore','trustpilot','liked','improve','tellmore','nps','thanks'],
+    sad:   ['overall','sadIntro','tellmore','nps','thanks']
+  };
+
+  let order = branches.happy; // default until rating is chosen
+  let idx = 0;
+
+  const body = document.getElementById('formBody');
+  const track = document.getElementById('progressTrack');
+  const label = document.getElementById('progressLabel');
+
+  function stepEl(name){ return body.querySelector('.step[data-step="'+name+'"]'); }
+
+  function renderProgress(){
+    track.innerHTML = '';
+    const total = order.length - 1; // exclude thanks from count display
+    for(let i=0;i<total;i++){
+      const s = document.createElement('span');
+      if(i < idx) s.classList.add('done');
+      track.appendChild(s);
+    }
+    label.textContent = order[idx]==='thanks' ? 'Done' : 'Step '+(idx+1)+' of '+total;
+  }
+
+  function show(name){
+    body.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+    stepEl(name).classList.add('active');
+    idx = order.indexOf(name);
+    renderProgress();
+  }
+
+  function goNext(explicit){
+    const current = order[idx];
+    let nextName = explicit;
+    if(!nextName){
+      nextName = order[idx+1];
+    }
+    if(current==='overall'){
+      state.branch = state.overall >= 4 ? 'happy' : 'sad';
+      order = branches[state.branch];
+      nextName = order[1];
+      // adjust header copy for branch
+      const headline = document.querySelector('.headline');
+      const sub = document.querySelector('.sub');
+      if(state.branch==='happy'){
+        headline.textContent = "Glad you're enjoying Greet";
+        sub.textContent = "Just a couple more quick taps.";
+      } else {
+        headline.textContent = "Help us fix what's not working";
+        sub.textContent = "Straight to the product team — no public post.";
+      }
+    }
+    if(current==='trustpilot'){ nextName = 'liked'; }
+    if(nextName==='thanks'){
+      const mark = document.getElementById('tyMark');
+      const h = document.getElementById('tyHeadline');
+      const s = document.getElementById('tySub');
+      if(state.branch==='sad'){
+        mark.classList.add('warm'); mark.textContent='♥';
+        h.textContent = "Thanks — we hear you.";
+        s.textContent = "A real person on our team reviews every note like this. We'll use it to fix things.";
+      } else {
+        mark.classList.remove('warm'); mark.textContent='✓';
+        h.textContent = "Thank you for helping us improve Greet.";
+        s.textContent = "Your feedback directly shapes future updates.";
+      }
+    }
+    show(nextName);
+  }
+
+  function goBack(){
+    const current = order[idx];
+    if(idx===0) return;
+    show(order[idx-1]);
+  }
+
+  body.addEventListener('click', e=>{
+    if(e.target.matches('[data-back]')) goBack();
+    if(e.target.matches('[data-next]')) goNext(e.target.getAttribute('data-next'));
+  });
+
+  // --- Step: overall stars ---
+  const starRow = document.getElementById('starRow');
+  const overallNext = document.getElementById('overallNext');
+  starRow.addEventListener('click', e=>{
+    const btn = e.target.closest('.star-btn');
+    if(!btn) return;
+    state.overall = parseInt(btn.dataset.v,10);
+    [...starRow.children].forEach(s=>{
+      s.classList.toggle('filled', parseInt(s.dataset.v,10) <= state.overall);
+    });
+    overallNext.disabled = false;
+  });
+  overallNext.addEventListener('click', ()=>goNext());
+
+  // --- Step: play store ---
+  const playChoices = document.getElementById('playChoices');
+  const playNext = document.getElementById('playNext');
+  playChoices.addEventListener('click', e=>{
+    const c = e.target.closest('.choice'); if(!c) return;
+    [...playChoices.children].forEach(x=>x.classList.remove('selected'));
+    c.classList.add('selected');
+    state.play = c.dataset.v;
+    playNext.disabled = false;
+  });
+  playNext.addEventListener('click', ()=>goNext());
+
+  // --- Step: trustpilot ---
+  const trustChoices = document.getElementById('trustChoices');
+  const trustNext = document.getElementById('trustNext');
+  trustChoices.addEventListener('click', e=>{
+    const c = e.target.closest('.choice'); if(!c) return;
+    [...trustChoices.children].forEach(x=>x.classList.remove('selected'));
+    c.classList.add('selected');
+    state.trust = c.dataset.v;
+    trustNext.disabled = false;
+  });
+  trustNext.addEventListener('click', ()=>goNext());
+
+  // --- Chip groups (liked / improve / improve-sad) ---
+  function wireChips(containerId, targetSet){
+    const el = document.getElementById(containerId);
+    el.addEventListener('click', e=>{
+      const chip = e.target.closest('.chip'); if(!chip) return;
+      chip.classList.toggle('selected');
+      const v = chip.dataset.v;
+      if(targetSet.has(v)) targetSet.delete(v); else targetSet.add(v);
+    });
+  }
+  wireChips('likedChips', state.liked);
+  wireChips('improveChips', state.improve);
+  wireChips('improveChipsSad', state.improve);
+
+  // --- free text ---
+  document.getElementById('freeText').addEventListener('input', e=>{
+    state.text = e.target.value;
+  });
+
+  // --- NPS ---
+  const npsRow = document.getElementById('npsRow');
+  const npsNext = document.getElementById('npsNext');
+  for(let i=0;i<=10;i++){
+    const b = document.createElement('button');
+    b.className='nps-btn';
+    b.textContent = i;
+    b.dataset.v = i;
+    npsRow.appendChild(b);
+  }
+  npsRow.addEventListener('click', e=>{
+    const b = e.target.closest('.nps-btn'); if(!b) return;
+    [...npsRow.children].forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected');
+    state.nps = parseInt(b.dataset.v,10);
+    npsNext.disabled = false;
+  });
+  function submitResponse(){
+    const payload = {
+      overall: state.overall,
+      branch: state.branch,
+      play: state.play,
+      trust: state.trust,
+      liked: Array.from(state.liked),
+      improve: Array.from(state.improve),
+      text: state.text,
+      nps: state.nps
+    };
+
+    if(!SHEET_WEBHOOK_URL || SHEET_WEBHOOK_URL.indexOf('PASTE_YOUR') === 0){
+      console.warn('SHEET_WEBHOOK_URL is not set — response was not saved.', payload);
+      return Promise.resolve();
+    }
+
+    // text/plain content-type keeps this a "simple request" so the
+    // browser skips a CORS preflight (Apps Script doesn't handle OPTIONS).
+    return fetch(SHEET_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(err=>{
+      console.error('Feedback submission failed:', err);
+    });
+  }
+
+  npsNext.addEventListener('click', ()=>{
+    npsNext.disabled = true;
+    npsNext.textContent = 'Submitting…';
+    submitResponse().finally(()=>{
+      npsNext.textContent = 'Submit';
+      goNext('thanks');
+    });
+  });
+
+  // --- restart (demo only) ---
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    location.reload();
+  });
+
+  renderProgress();
+})();
+</script>
+
+</body>
+</html>
