@@ -293,6 +293,8 @@
     font-size:16px;flex-shrink:0;
     background:#fff;border:1px solid var(--line);
   }
+  .review-block a{color:var(--ink);text-decoration:none;font-weight:600;font-size:13.5px;}
+  .review-block a:hover{text-decoration:underline;}
   .thankyou{
     text-align:center;
     display:flex;
@@ -358,40 +360,23 @@
         </div>
       </div>
 
-      <!-- STEP: play store (happy branch) -->
-      <div class="step" data-step="playstore">
-        <h2 class="q">Would you rate Greet on the Google Play Store?</h2>
-        <div class="review-block"><div class="r-icon">▶</div><span style="font-size:13px;color:var(--muted)">Takes 15 seconds on your device</span></div>
-        <div class="choice-list" id="playChoices">
-          <div class="choice" data-v="yes"><span>Yes, definitely</span><span class="mark"></span></div>
-          <div class="choice" data-v="later"><span>Maybe later</span><span class="mark"></span></div>
-          <div class="choice" data-v="no"><span>No</span><span class="mark"></span></div>
-        </div>
-        <div class="spacer"></div>
-        <div class="nav-row">
-          <button class="btn-text" data-back>Back</button>
-          <button class="btn-primary" id="playNext" disabled>Continue</button>
-        </div>
-      </div>
-
-      <!-- STEP: trustpilot (happy branch) -->
-      <div class="step" data-step="trustpilot">
-        <h2 class="q">Would you be willing to leave us a review on Trustpilot?</h2>
-        <div class="choice-list" id="trustChoices">
+      <!-- STEP: permission to ask for a public review (happy branch) -->
+      <div class="step" data-step="permission">
+        <h2 class="q">Would you be willing to support us by leaving a public review on Trustpilot or the Google Play Store?</h2>
+        <div class="choice-list" id="permissionChoices">
           <div class="choice" data-v="yes"><span>Yes</span><span class="mark"></span></div>
-          <div class="choice" data-v="maybe"><span>Maybe</span><span class="mark"></span></div>
           <div class="choice" data-v="no"><span>No</span><span class="mark"></span></div>
         </div>
         <div class="spacer"></div>
         <div class="nav-row">
           <button class="btn-text" data-back>Back</button>
-          <button class="btn-primary" id="trustNext" disabled>Continue</button>
+          <button class="btn-primary" id="permissionNext" disabled>Continue</button>
         </div>
       </div>
 
       <!-- STEP: what did you like (happy branch) -->
       <div class="step" data-step="liked">
-        <h2 class="q">What did you like the most?</h2>
+        <h2 class="q">Which feature or experience did you like the most?</h2>
         <p class="hint">Pick as many as apply.</p>
         <div class="chip-grid" id="likedChips">
           <div class="chip" data-v="Easy Event Creation">Easy Event Creation</div>
@@ -407,7 +392,7 @@
         <div class="spacer"></div>
         <div class="nav-row">
           <button class="btn-text" data-back>Back</button>
-          <button class="btn-primary" data-next="improve">Continue</button>
+          <button class="btn-primary" data-next="permission">Continue</button>
         </div>
       </div>
 
@@ -435,38 +420,16 @@
         </div>
       </div>
 
-      <!-- STEP: where improve (happy branch, optional) -->
-      <div class="step" data-step="improve">
-        <h2 class="q">Where can we improve?</h2>
-        <p class="hint">Optional — pick as many as apply.</p>
-        <div class="chip-grid" id="improveChips">
-          <div class="chip" data-v="Website Speed">Website Speed</div>
-          <div class="chip" data-v="UI/UX">UI/UX</div>
-          <div class="chip" data-v="Payment Experience">Payment Experience</div>
-          <div class="chip" data-v="QR Scanner">QR Scanner</div>
-          <div class="chip" data-v="Mobile App">Mobile App</div>
-          <div class="chip" data-v="Dashboard">Dashboard</div>
-          <div class="chip" data-v="Reports">Reports</div>
-          <div class="chip" data-v="Notifications">Notifications</div>
-          <div class="chip" data-v="Customer Support">Customer Support</div>
-          <div class="chip" data-v="Event Creation Process">Event Creation Process</div>
-        </div>
-        <div class="spacer"></div>
-        <div class="nav-row">
-          <button class="btn-text" data-back>Back</button>
-          <button class="btn-primary" data-next="tellmore">Continue</button>
-        </div>
-      </div>
-
-      <!-- STEP: tell us more -->
+      <!-- STEP: tell us more (sad branch) / written review (happy branch) -->
+      <!-- Copy is swapped at runtime based on state.branch — see show() -->
       <div class="step" data-step="tellmore">
-        <h2 class="q">Tell us more</h2>
-        <p class="hint">Optional.</p>
+        <h2 class="q" id="tellmoreQ">Tell us more</h2>
+        <p class="hint" id="tellmoreHint">Optional.</p>
         <textarea id="freeText" placeholder="Tell us what we can improve or any feature you'd love to see."></textarea>
         <div class="spacer"></div>
         <div class="nav-row">
           <button class="btn-text" data-back>Back</button>
-          <button class="btn-primary" data-next="nps">Continue</button>
+          <button class="btn-primary" id="tellmoreNext">Continue</button>
         </div>
       </div>
 
@@ -488,6 +451,8 @@
           <div class="ty-mark" id="tyMark">✓</div>
           <h2 class="q" id="tyHeadline">Thank you for helping us improve Greet.</h2>
           <p class="hint" id="tySub">Your feedback directly shapes future updates.</p>
+          <!-- Populated only when the user agreed to leave a public review (Step 5) -->
+          <div id="tyLinks" style="display:none;flex-direction:column;gap:8px;width:100%;"></div>
           <button class="btn-text restart" id="restartBtn">Fill it again (demo)</button>
         </div>
       </div>
@@ -501,10 +466,13 @@
   // Paste your deployed Apps Script Web App URL here (ends in /exec)
   const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzGNExOG_wAAd9wwoQ05k8iCgP5c7dOy-x7Jj7FobCl3CD10kSmtLj5ZReFjOq2iclUAg/exec";
 
+  // Paste your real public review destinations here
+  const TRUSTPILOT_URL = ""; // no Trustpilot profile yet — leave empty until you create one
+  const PLAYSTORE_URL = "https://play.google.com/store/apps/details?id=com.fydo.eventorganiser";
+
   const state = {
     overall: 0,
-    play: null,
-    trust: null,
+    permission: null, // 'yes' | 'no' — replaces the old separate play/trust intents
     liked: new Set(),
     improve: new Set(),
     text: "",
@@ -512,8 +480,10 @@
     branch: null // 'happy' | 'sad'
   };
 
+  // happy: issue resolved -> written review -> liked -> permission to ask for a public review -> thanks
+  // sad: unchanged private feedback path, no public review ask
   const branches = {
-    happy: ['overall','playstore','trustpilot','liked','improve','tellmore','nps','thanks'],
+    happy: ['overall','tellmore','liked','permission','thanks'],
     sad:   ['overall','sadIntro','tellmore','nps','thanks']
   };
 
@@ -542,6 +512,28 @@
     stepEl(name).classList.add('active');
     idx = order.indexOf(name);
     renderProgress();
+
+    // The tellmore step is shared by both branches: a required written
+    // review after a happy outcome, or the original optional note on the
+    // sad path. Swap copy/requiredness here so it's correct however the
+    // step is reached (forward nav or Back).
+    if(name==='tellmore'){
+      const q = document.getElementById('tellmoreQ');
+      const hint = document.getElementById('tellmoreHint');
+      const freeText = document.getElementById('freeText');
+      const next = document.getElementById('tellmoreNext');
+      if(state.branch==='happy'){
+        q.textContent = "We're glad everything worked well! 😊 Could you please share a short written review about your experience?";
+        hint.textContent = "A sentence or two is perfect.";
+        freeText.placeholder = "Share a short review of your experience...";
+        next.disabled = !state.text.trim();
+      } else {
+        q.textContent = "Tell us more";
+        hint.textContent = "Optional.";
+        freeText.placeholder = "Tell us what we can improve or any feature you'd love to see.";
+        next.disabled = false;
+      }
+    }
   }
 
   function goNext(explicit){
@@ -565,15 +557,33 @@
         sub.textContent = "Straight to the product team — no public post.";
       }
     }
-    if(current==='trustpilot'){ nextName = 'liked'; }
     if(nextName==='thanks'){
       const mark = document.getElementById('tyMark');
       const h = document.getElementById('tyHeadline');
       const s = document.getElementById('tySub');
+      const links = document.getElementById('tyLinks');
+      links.style.display = 'none';
+      links.innerHTML = '';
       if(state.branch==='sad'){
         mark.classList.add('warm'); mark.textContent='♥';
         h.textContent = "Thanks — we hear you.";
         s.textContent = "A real person on our team reviews every note like this. We'll use it to fix things.";
+      } else if(state.permission==='yes'){
+        // Step 5: only shown after explicit permission
+        mark.classList.remove('warm'); mark.textContent='✓';
+        h.textContent = "Thank you! Your support means a lot to us.";
+        s.textContent = "We'd love it if you left a public review too:";
+        // Only render a link if its URL is actually configured, so an
+        // empty placeholder doesn't produce a dead link on the page.
+        links.innerHTML =
+          (TRUSTPILOT_URL ? '<div class="review-block"><div class="r-icon">★</div><a href="'+TRUSTPILOT_URL+'" target="_blank" rel="noopener">Leave a review on Trustpilot</a></div>' : '') +
+          (PLAYSTORE_URL ? '<div class="review-block"><div class="r-icon">▶</div><a href="'+PLAYSTORE_URL+'" target="_blank" rel="noopener">Rate us on Google Play</a></div>' : '');
+        links.style.display = 'flex';
+      } else if(state.permission==='no'){
+        // Step 6: no public review — do not ask again, just thank them
+        mark.classList.remove('warm'); mark.textContent='✓';
+        h.textContent = "No problem at all.";
+        s.textContent = "Thank you for taking the time to share your feedback!";
       } else {
         mark.classList.remove('warm'); mark.textContent='✓';
         h.textContent = "Thank you for helping us improve Greet.";
@@ -608,31 +618,27 @@
   });
   overallNext.addEventListener('click', ()=>goNext());
 
-  // --- Step: play store ---
-  const playChoices = document.getElementById('playChoices');
-  const playNext = document.getElementById('playNext');
-  playChoices.addEventListener('click', e=>{
+  // --- Step: permission to ask for a public review (replaces the old
+  // separate playstore/trustpilot intent taps with a single yes/no ask) ---
+  const permissionChoices = document.getElementById('permissionChoices');
+  const permissionNext = document.getElementById('permissionNext');
+  permissionChoices.addEventListener('click', e=>{
     const c = e.target.closest('.choice'); if(!c) return;
-    [...playChoices.children].forEach(x=>x.classList.remove('selected'));
+    [...permissionChoices.children].forEach(x=>x.classList.remove('selected'));
     c.classList.add('selected');
-    state.play = c.dataset.v;
-    playNext.disabled = false;
+    state.permission = c.dataset.v;
+    permissionNext.disabled = false;
   });
-  playNext.addEventListener('click', ()=>goNext());
-
-  // --- Step: trustpilot ---
-  const trustChoices = document.getElementById('trustChoices');
-  const trustNext = document.getElementById('trustNext');
-  trustChoices.addEventListener('click', e=>{
-    const c = e.target.closest('.choice'); if(!c) return;
-    [...trustChoices.children].forEach(x=>x.classList.remove('selected'));
-    c.classList.add('selected');
-    state.trust = c.dataset.v;
-    trustNext.disabled = false;
+  permissionNext.addEventListener('click', ()=>{
+    permissionNext.disabled = true;
+    permissionNext.textContent = 'Submitting…';
+    submitResponse().finally(()=>{
+      permissionNext.textContent = 'Continue';
+      goNext(); // -> thanks (Step 5 or Step 6 copy is chosen there)
+    });
   });
-  trustNext.addEventListener('click', ()=>goNext());
 
-  // --- Chip groups (liked / improve / improve-sad) ---
+  // --- Chip groups (liked / improve-sad) ---
   function wireChips(containerId, targetSet){
     const el = document.getElementById(containerId);
     el.addEventListener('click', e=>{
@@ -643,13 +649,15 @@
     });
   }
   wireChips('likedChips', state.liked);
-  wireChips('improveChips', state.improve);
   wireChips('improveChipsSad', state.improve);
 
-  // --- free text ---
+  // --- free text (written review on happy branch, optional note on sad) ---
+  const tellmoreNext = document.getElementById('tellmoreNext');
   document.getElementById('freeText').addEventListener('input', e=>{
     state.text = e.target.value;
+    if(state.branch==='happy') tellmoreNext.disabled = !state.text.trim();
   });
+  tellmoreNext.addEventListener('click', ()=>goNext());
 
   // --- NPS ---
   const npsRow = document.getElementById('npsRow');
@@ -672,11 +680,14 @@
     const payload = {
       overall: state.overall,
       branch: state.branch,
-      play: state.play,
-      trust: state.trust,
+      // 'play'/'trust' are kept as separate keys for backward compatibility
+      // with the existing sheet columns, both now mirroring the single
+      // combined permission answer ('yes'/'no') asked in Step 4.
+      play: state.permission,
+      trust: state.permission,
       liked: Array.from(state.liked),
       improve: Array.from(state.improve),
-      text: state.text,
+      text: state.text, // written review (happy) or optional note (sad)
       nps: state.nps
     };
 
